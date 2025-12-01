@@ -1,0 +1,406 @@
+{% comment %}
+  {% assign avg_rating = block.settings.product.metafields.demo.avg_rating.value | round %}
+  <span style="color:{{ block.settings.colour }}">
+    {% render 'stars', rating: avg_rating %}
+  </span>
+  {% if avg_rating >= 4 %}
+    <br>
+    <img src="{{ "thumbs-up.png" | asset_img_url: '15x' }}" height="15" width="15" loading="lazy">
+    {{ 'ratings.home.recommendationText' | t }}
+  {% endif %}
+{% endcomment %}
+
+<style>
+  /* --- General Reset & Typography --- */
+  * {
+    box-sizing: border-box;
+    margin: 0;
+    padding: 0;
+    font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+  }
+
+  body {
+    background-color: #f9f9f9;
+    color: #333;
+    padding: 20px;
+  }
+
+  .container {
+    max-width: 1600px; /* Updated to 1600px */
+    margin: 0 auto;
+    display: flex;
+    flex-wrap: wrap;
+    gap: 30px;
+  }
+
+  /* --- Left Side: Product Cart (60%) --- */
+  .cart-section {
+    flex: 0 0 60%;
+    background: white;
+    padding: 30px;
+    border: 1px solid #e0e0e0; /* Border instead of shadow */
+    border-radius: 8px;
+  }
+
+  h2 {
+    margin-bottom: 25px;
+    font-weight: 600;
+    color: #2c3e50;
+  }
+
+  /* --- Table Styling --- */
+  .cart-table {
+    width: 100%;
+    border-collapse: collapse;
+  }
+
+  .cart-table th,
+  .cart-table td {
+    text-align: left;
+    padding: 15px;
+    border-bottom: 1px solid #eee;
+  }
+
+  .cart-table th {
+    text-transform: uppercase;
+    font-size: 0.85rem;
+    color: #777;
+    letter-spacing: 0.5px;
+  }
+
+  .product-info {
+    display: flex;
+    align-items: center;
+    gap: 15px;
+  }
+
+  .product-img {
+    width: 60px;
+    height: 60px;
+    background-color: #f0f0f0;
+    border-radius: 6px;
+    object-fit: cover;
+  }
+
+  .qty-input {
+    width: 60px;
+    padding: 8px;
+    text-align: center;
+    border: 1px solid #ddd;
+    border-radius: 4px;
+  }
+
+  /* --- SVG Icon Button --- */
+  .remove-btn {
+    background: none;
+    border: none;
+    cursor: pointer;
+    padding: 5px;
+    color: #999;
+    transition: color 0.2s;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+  }
+
+  .remove-btn:hover {
+    color: #e74c3c;
+  }
+
+  .remove-btn svg {
+    width: 20px;
+    height: 20px;
+  }
+
+  /* --- Right Side: Checkout --- */
+  .checkout-section {
+    flex: 1;
+    background: white;
+    padding: 30px;
+    border: 1px solid #e0e0e0; /* Border instead of shadow */
+    border-radius: 8px;
+    display: flex;
+    flex-direction: column;
+    gap: 25px;
+    height: fit-content;
+  }
+
+  .section-title {
+    font-size: 1.1rem;
+    margin-bottom: 15px;
+    padding-bottom: 10px;
+    border-bottom: 2px solid #f4f4f4;
+  }
+
+  /* --- Form Styles --- */
+  .form-group {
+    margin-bottom: 15px;
+  }
+
+  .form-group label {
+    display: block;
+    margin-bottom: 6px;
+    font-size: 0.9rem;
+    color: #555;
+    font-weight: 500;
+  }
+
+  .form-control {
+    width: 100%;
+    padding: 12px;
+    border: 1px solid #ddd;
+    border-radius: 6px;
+    font-size: 0.95rem;
+    transition: border-color 0.2s;
+  }
+
+  .form-control:focus {
+    outline: none;
+    border-color: #6772e5;
+  }
+
+  .card-row {
+    display: flex;
+    gap: 15px;
+  }
+
+  /* --- Payment Buttons --- */
+  .payment-buttons {
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
+  }
+
+  .pay-btn {
+    padding: 14px;
+    border: none;
+    border-radius: 6px;
+    cursor: pointer;
+    font-weight: 600;
+    font-size: 1rem;
+    text-align: center;
+    transition: all 0.2s;
+    color: white;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 10px;
+  }
+
+  .pay-btn:hover {
+    opacity: 0.9;
+    transform: translateY(-1px);
+  }
+
+  .btn-ssl {
+    background-color: #006a4e;
+  }
+  .btn-bkash {
+    background-color: #e2136e;
+  }
+  .btn-stripe {
+    background-color: #635bff;
+  }
+
+  /* --- Stripe Logic --- */
+  #stripe-form-wrapper {
+    max-height: 0;
+    overflow: hidden;
+    transition: max-height 0.4s ease-out, padding 0.4s ease;
+    background-color: #f7fafc;
+    border-radius: 6px;
+  }
+
+  #stripe-form-wrapper.active {
+    max-height: 500px; /* Arbitrary large height to allow expansion */
+    padding: 20px;
+    margin-top: 15px;
+    border: 1px solid #e3e8ee;
+  }
+
+  .total-summary {
+    font-size: 1.3rem;
+    font-weight: 700;
+    display: flex;
+    justify-content: space-between;
+    color: #333;
+    margin-bottom: 10px;
+  }
+
+  /* --- Responsive --- */
+  @media (max-width: 992px) {
+    .cart-section,
+    .checkout-section {
+      flex: 0 0 100%;
+    }
+    .table-responsive {
+      overflow-x: auto;
+    }
+  }
+</style>
+
+<div class="container">
+  <div class="cart-section">
+    <h2>Your Cart</h2>
+    <div class="table-responsive">
+      <table class="cart-table">
+        <thead>
+          <tr>
+            <th>Product</th>
+            <th>Price</th>
+            <th>Qty</th>
+            <th>Total</th>
+            <th></th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr>
+            <td>
+              <div class="product-info">
+                <img src="https://via.placeholder.com/60" alt="Product" class="product-img">
+                <div>
+                  <div style="font-weight:600;">Noise Cancelling Headphones</div>
+                  <div style="font-size:0.85rem; color:#888;">Electronics</div>
+                </div>
+              </div>
+            </td>
+            <td>$120.00</td>
+            <td><input type="number" value="1" class="qty-input"></td>
+            <td>$120.00</td>
+            <td>
+              <button class="remove-btn" title="Remove Item">
+                <svg
+                  xmlns="http://www.w3.org/2000/svg"
+                  fill="none"
+                  viewBox="0 0 24 24"
+                  stroke="currentColor"
+                  stroke-width="2"
+                >
+                  <path stroke-linecap="round" stroke-linejoin="round" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
+                </svg>
+              </button>
+            </td>
+          </tr>
+          <tr>
+            <td>
+              <div class="product-info">
+                <img src="https://via.placeholder.com/60" alt="Product" class="product-img">
+                <div>
+                  <div style="font-weight:600;">Running Sneakers</div>
+                  <div style="font-size:0.85rem; color:#888;">Apparel</div>
+                </div>
+              </div>
+            </td>
+            <td>$80.00</td>
+            <td><input type="number" value="2" class="qty-input"></td>
+            <td>$160.00</td>
+            <td>
+              <button class="remove-btn" title="Remove Item">
+                <svg
+                  xmlns="http://www.w3.org/2000/svg"
+                  fill="none"
+                  viewBox="0 0 24 24"
+                  stroke="currentColor"
+                  stroke-width="2"
+                >
+                  <path stroke-linecap="round" stroke-linejoin="round" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
+                </svg>
+              </button>
+            </td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
+  </div>
+
+  <div class="checkout-section">
+    <div>
+      <div class="section-title">Shipping Details</div>
+      <form>
+        <div class="form-group">
+          <label>Full Name</label>
+          <input type="text" class="form-control" placeholder="e.g. John Doe">
+        </div>
+        <div class="form-group">
+          <label>Street Address</label>
+          <input type="text" class="form-control" placeholder="123 Main St">
+        </div>
+        <div class="card-row">
+          <div class="form-group" style="flex:1;">
+            <label>City</label>
+            <input type="text" class="form-control" placeholder="Dhaka">
+          </div>
+          <div class="form-group" style="flex:1;">
+            <label>Post Code</label>
+            <input type="text" class="form-control" placeholder="1200">
+          </div>
+        </div>
+      </form>
+    </div>
+
+    <div class="total-summary">
+      <span>Total</span>
+      <span>$280.00</span>
+    </div>
+
+    <div>
+      <div class="section-title">Payment Method</div>
+
+      <div class="payment-buttons">
+        <button class="pay-btn btn-ssl">Pay with SSLCommerz</button>
+
+        <button class="pay-btn btn-bkash">Pay with bKash</button>
+
+        <button class="pay-btn btn-stripe" id="stripe-trigger-btn">Pay with Credit Card (Stripe)</button>
+
+        <div id="stripe-form-wrapper">
+          <div class="form-group">
+            <label>Card Number</label>
+            <input type="text" class="form-control" placeholder="0000 0000 0000 0000">
+          </div>
+          <div class="card-row">
+            <div class="form-group" style="flex:1;">
+              <label>Expiry</label>
+              <input type="text" class="form-control" placeholder="MM/YY">
+            </div>
+            <div class="form-group" style="flex:1;">
+              <label>CVC</label>
+              <input type="text" class="form-control" placeholder="123">
+            </div>
+          </div>
+          <button class="pay-btn btn-stripe" style="width:100%; margin-top:10px;">Confirm Payment</button>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<script>
+  // Get the button and the form wrapper
+  const stripeBtn = document.getElementById('stripe-trigger-btn');
+  const stripeForm = document.getElementById('stripe-form-wrapper');
+
+  // Add click event listener
+  stripeBtn.addEventListener('click', function () {
+    // Toggle the 'active' class
+    stripeForm.classList.toggle('active');
+
+    // Optional: Change button text based on state
+    if (stripeForm.classList.contains('active')) {
+      stripeBtn.style.opacity = '0.7'; // Dim the main button slightly to show focus is on form
+    } else {
+      stripeBtn.style.opacity = '1';
+    }
+  });
+</script>
+
+{% schema %}
+{
+  "name": "Star Rating",
+  "target": "section",
+  "settings": [
+    { "type": "product", "id": "product", "label": "product", "autofill": true },
+    { "type": "color", "id": "colour", "label": "Star Colour", "default": "#ff0000" }
+  ]
+}
+{% endschema %}
